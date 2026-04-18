@@ -4,7 +4,6 @@ import PlayArrow from "@mui/icons-material/PlayArrow";
 import VerticalAlignTop from "@mui/icons-material/VerticalAlignTop";
 import {
   Box,
-  Button,
   CssBaseline,
   GlobalStyles,
   IconButton,
