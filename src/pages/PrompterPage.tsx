@@ -189,10 +189,12 @@ export function PrompterPage({
 
   return (
     <ThemeProvider theme={appTheme}>
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}>
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", maxHeight: "100dvh", overflow: "hidden" }}>
         <CssBaseline />
         <GlobalStyles
           styles={{
+            "html, body": { width: "100%", height: "100%", margin: 0, padding: 0, overflow: "hidden" },
+            "#root": { width: "100%", height: "100%", display: "flex", flexDirection: "column" },
             "*::-webkit-scrollbar": { width: 10, height: 10 },
             "*::-webkit-scrollbar-thumb": { backgroundColor: colors.border, borderRadius: 8 },
             "*::-webkit-scrollbar-track": { backgroundColor: "transparent" },
