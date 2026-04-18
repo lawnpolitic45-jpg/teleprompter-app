@@ -124,22 +124,30 @@ export function PrompterPage({
 
   const { unitCount, punctuationCount, lineCount } = computeScriptStats(script);
 
-  const [timeStats, setTimeStats] = useState({ elapsed: 0, remaining: 0 });
+  const elapsedRef = useRef<HTMLDivElement>(null);
+  const remainingRef = useRef<HTMLDivElement>(null);
+  const fsElapsedRef = useRef<HTMLDivElement>(null);
+  const fsRemainingRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const calc = () => {
       const el = fsOpenRef.current ? fsScrollRef.current : previewScrollRef.current;
       if (!el) return;
       const distance = Math.max(0, el.scrollHeight - el.clientHeight);
-      if (distance === 0) {
-        setTimeStats((prev) => (prev.elapsed === 0 && prev.remaining === 0 ? prev : { elapsed: 0, remaining: 0 }));
-        return;
+      let elapsed = 0;
+      let remaining = 0;
+      if (distance > 0) {
+        const current = el.scrollTop;
+        const spd = speedRef.current;
+        elapsed = current / spd;
+        remaining = (distance - current) / spd;
       }
-      const current = el.scrollTop;
-      const spd = speedRef.current;
-      const elapsedSec = current / spd;
-      const remainingSec = (distance - current) / spd;
-      setTimeStats({ elapsed: elapsedSec, remaining: remainingSec });
+      const eStr = formatTime(elapsed);
+      const rStr = "-" + formatTime(remaining);
+      if (elapsedRef.current) elapsedRef.current.innerText = eStr;
+      if (remainingRef.current) remainingRef.current.innerText = rStr;
+      if (fsElapsedRef.current) fsElapsedRef.current.innerText = eStr;
+      if (fsRemainingRef.current) fsRemainingRef.current.innerText = rStr;
     };
     calc();
     const iv = setInterval(calc, 250);
@@ -282,21 +290,26 @@ export function PrompterPage({
             px: 2,
           }}
         >
-          <Tooltip title="返回">
-            <IconButton
-              onClick={onBackHome}
-              sx={{
-                width: 44,
-                height: 44,
-                bgcolor: colors.primary,
-                color: "#fff",
-                borderRadius: 1.5,
-                "&:hover": { bgcolor: colors.primaryHover },
-              }}
-            >
-              <ReturnPathIcon />
-            </IconButton>
-          </Tooltip>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Tooltip title="返回">
+              <IconButton
+                onClick={onBackHome}
+                sx={{
+                  width: 44,
+                  height: 44,
+                  bgcolor: colors.primary,
+                  color: "#fff",
+                  borderRadius: 1.5,
+                  "&:hover": { bgcolor: colors.primaryHover },
+                }}
+              >
+                <ReturnPathIcon />
+              </IconButton>
+            </Tooltip>
+            <Box ref={elapsedRef} sx={{ ml: 0.5, fontFamily: "monospace", fontSize: 16, fontWeight: 600, color: colors.secondary }}>
+              00:00
+            </Box>
+          </Box>
 
           <Box
             sx={{
@@ -455,9 +468,8 @@ export function PrompterPage({
                   <VerticalAlignTop />
                 </IconButton>
               </Tooltip>
-              <Box sx={{ ml: 1, display: "flex", flexDirection: "column", alignItems: "flex-end", fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: "#fff", bgcolor: "rgba(255,255,255,0.08)", px: 1, py: 0.5, borderRadius: 1.5 }}>
-                <Box>{formatTime(timeStats.elapsed)}</Box>
-                <Box sx={{ opacity: 0.6 }}>-{formatTime(timeStats.remaining)}</Box>
+              <Box ref={remainingRef} sx={{ ml: 1, fontFamily: "monospace", fontSize: 16, fontWeight: 600, color: colors.secondary }}>
+                -00:00
               </Box>
             </Stack>
           </Box>
@@ -473,29 +485,6 @@ export function PrompterPage({
               flexDirection: "column",
             }}
           >
-            <Box
-              sx={{
-                position: "absolute",
-                top: 24,
-                right: 24,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                fontFamily: "monospace",
-                fontSize: 16,
-                fontWeight: 700,
-                color: "#fff",
-                bgcolor: "rgba(0,0,0,0.4)",
-                px: 1.5,
-                py: 1,
-                borderRadius: 2,
-                pointerEvents: "none",
-                zIndex: 10,
-              }}
-            >
-              <Box>{formatTime(timeStats.elapsed)}</Box>
-              <Box sx={{ opacity: 0.6 }}>-{formatTime(timeStats.remaining)}</Box>
-            </Box>
             <Box
               ref={previewScrollRef}
               sx={{
@@ -613,7 +602,8 @@ export function PrompterPage({
         ) : null}
 
         <FullscreenOverlay
-          timeStats={timeStats}
+          elapsedRef={fsElapsedRef}
+          remainingRef={fsRemainingRef}
           open={fsOpen}
           rootRef={fsRootRef}
           scrollRef={fsScrollRef}

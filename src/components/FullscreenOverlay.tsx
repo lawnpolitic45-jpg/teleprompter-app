@@ -9,14 +9,14 @@ import VerticalAlignTop from "@mui/icons-material/VerticalAlignTop";
 import { Box, IconButton, Paper, Stack, Tooltip } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { colors } from "../theme";
-import { formatTime } from "../pages/PrompterPage";
 import { PrompterContent } from "./PrompterContent";
 
 const DOCK_SHOW_ZONE = 120;
 const DOCK_HIDE_MS = 2500;
 
 type Props = {
-  timeStats: { elapsed: number; remaining: number };
+  elapsedRef: React.RefObject<HTMLElement | null>;
+  remainingRef: React.RefObject<HTMLElement | null>;
   open: boolean;
   rootRef: React.RefObject<HTMLDivElement | null>;
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -34,7 +34,8 @@ type Props = {
 };
 
 export function FullscreenOverlay({
-  timeStats,
+  elapsedRef,
+  remainingRef,
   open,
   rootRef,
   scrollRef,
@@ -119,6 +120,7 @@ export function FullscreenOverlay({
       }}
     >
       <Box
+        ref={elapsedRef}
         sx={{
           position: "absolute",
           top: 32,
@@ -134,9 +136,10 @@ export function FullscreenOverlay({
           textShadow: "0px 2px 8px rgba(0,0,0,0.8)",
         }}
       >
-        {formatTime(timeStats.elapsed)}
+        00:00
       </Box>
       <Box
+        ref={remainingRef}
         sx={{
           position: "absolute",
           top: 32,
@@ -152,7 +155,7 @@ export function FullscreenOverlay({
           textShadow: "0px 2px 8px rgba(0,0,0,0.8)",
         }}
       >
-        -{formatTime(timeStats.remaining)}
+        -00:00
       </Box>
 
       <Box
