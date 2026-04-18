@@ -22,6 +22,58 @@ import { useAutoScroll } from "../hooks/useAutoScroll";
 import { appTheme, colors } from "../theme";
 import { computeScriptStats } from "../utils/scriptStats";
 
+import { SvgIcon } from "@mui/material";
+
+function ReturnPathIcon(props: any) {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7 20h6a4 4 0 0 0 4-4V8a4 4 0 0 0-4-4H5"
+      />
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 8 5 4 9 0"
+      />
+    </SvgIcon>
+  );
+}
+
+function MirrorHorizontalIcon(props: any) {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M8 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h2" />
+      <path fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M16 4h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-2" />
+      <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 3" />
+    </SvgIcon>
+  );
+}
+
+function MirrorVerticalIcon(props: any) {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2" />
+      <path fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+      <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 3" />
+    </SvgIcon>
+  );
+}
+
+export const formatTime = (secs: number) => {
+  if (secs < 0 || isNaN(secs) || !isFinite(secs)) secs = 0;
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+};
+
 type ToastApi = { msg: string | null; show: (m: string) => void };
 
 type Props = {
@@ -72,6 +124,28 @@ export function PrompterPage({
   const playing = fsOpen ? playingFs : playingPreview;
 
   const { unitCount, punctuationCount, lineCount } = computeScriptStats(script);
+
+  const [timeStats, setTimeStats] = useState({ elapsed: 0, remaining: 0 });
+
+  useEffect(() => {
+    const calc = () => {
+      const el = fsOpenRef.current ? fsScrollRef.current : previewScrollRef.current;
+      if (!el) return;
+      const distance = Math.max(0, el.scrollHeight - el.clientHeight);
+      if (distance === 0) {
+        setTimeStats((prev) => (prev.elapsed === 0 && prev.remaining === 0 ? prev : { elapsed: 0, remaining: 0 }));
+        return;
+      }
+      const current = el.scrollTop;
+      const spd = speedRef.current;
+      const elapsedSec = current / spd;
+      const remainingSec = (distance - current) / spd;
+      setTimeStats({ elapsed: elapsedSec, remaining: remainingSec });
+    };
+    calc();
+    const iv = setInterval(calc, 250);
+    return () => clearInterval(iv);
+  }, []);
 
   const onUserInterrupt = useCallback(() => {
     setPlayingPreview(false);
@@ -209,19 +283,21 @@ export function PrompterPage({
             px: 2,
           }}
         >
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={onBackHome}
-            sx={{
-              height: 32,
-              borderColor: colors.border,
-              color: colors.scriptText,
-              fontWeight: 700,
-            }}
-          >
-            返回
-          </Button>
+          <Tooltip title="返回">
+            <IconButton
+              onClick={onBackHome}
+              sx={{
+                width: 44,
+                height: 44,
+                bgcolor: colors.primary,
+                color: "#fff",
+                borderRadius: 1.5,
+                "&:hover": { bgcolor: colors.primaryHover },
+              }}
+            >
+              <ReturnPathIcon />
+            </IconButton>
+          </Tooltip>
 
           <Box
             sx={{
@@ -276,44 +352,44 @@ export function PrompterPage({
               </Stack>
             </Box>
 
-            <Button
-              variant={mirrorH ? "contained" : "outlined"}
-              onClick={() => onMirrorH(!mirrorH)}
-              sx={{
-                minWidth: 76,
-                height: 36,
-                fontSize: 12,
-                fontWeight: 600,
-                color: mirrorH ? "#fff" : colors.label,
-                bgcolor: mirrorH ? colors.primary : "transparent",
-                borderColor: mirrorH ? colors.primary : colors.border,
-                "&:hover": {
-                  bgcolor: mirrorH ? colors.primaryHover : "rgba(255, 255, 255, 0.05)",
-                  borderColor: mirrorH ? colors.primaryHover : colors.border,
-                }
-              }}
-            >
-              水平镜像
-            </Button>
-            <Button
-              variant={mirrorV ? "contained" : "outlined"}
-              onClick={() => onMirrorV(!mirrorV)}
-              sx={{
-                minWidth: 76,
-                height: 36,
-                fontSize: 12,
-                fontWeight: 600,
-                color: mirrorV ? "#fff" : colors.label,
-                bgcolor: mirrorV ? colors.primary : "transparent",
-                borderColor: mirrorV ? colors.primary : colors.border,
-                "&:hover": {
-                  bgcolor: mirrorV ? colors.primaryHover : "rgba(255, 255, 255, 0.05)",
-                  borderColor: mirrorV ? colors.primaryHover : colors.border,
-                }
-              }}
-            >
-              垂直镜像
-            </Button>
+            <Tooltip title="水平镜像">
+              <IconButton
+                onClick={() => onMirrorH(!mirrorH)}
+                sx={{
+                  width: 44,
+                  height: 44,
+                  color: mirrorH ? "#fff" : colors.label,
+                  bgcolor: mirrorH ? colors.primary : "transparent",
+                  border: `1px solid ${mirrorH ? colors.primary : colors.border}`,
+                  borderRadius: 1.5,
+                  "&:hover": {
+                    bgcolor: mirrorH ? colors.primaryHover : "rgba(255, 255, 255, 0.05)",
+                    borderColor: mirrorH ? colors.primaryHover : colors.border,
+                  }
+                }}
+              >
+                <MirrorHorizontalIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="垂直镜像">
+              <IconButton
+                onClick={() => onMirrorV(!mirrorV)}
+                sx={{
+                  width: 44,
+                  height: 44,
+                  color: mirrorV ? "#fff" : colors.label,
+                  bgcolor: mirrorV ? colors.primary : "transparent",
+                  border: `1px solid ${mirrorV ? colors.primary : colors.border}`,
+                  borderRadius: 1.5,
+                  "&:hover": {
+                    bgcolor: mirrorV ? colors.primaryHover : "rgba(255, 255, 255, 0.05)",
+                    borderColor: mirrorV ? colors.primaryHover : colors.border,
+                  }
+                }}
+              >
+                <MirrorVerticalIcon />
+              </IconButton>
+            </Tooltip>
 
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               <Tooltip title="全屏">
@@ -380,6 +456,10 @@ export function PrompterPage({
                   <VerticalAlignTop />
                 </IconButton>
               </Tooltip>
+              <Box sx={{ ml: 1, display: "flex", flexDirection: "column", alignItems: "flex-end", fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: "#fff", bgcolor: "rgba(255,255,255,0.08)", px: 1, py: 0.5, borderRadius: 1.5 }}>
+                <Box>{formatTime(timeStats.elapsed)}</Box>
+                <Box sx={{ opacity: 0.6 }}>-{formatTime(timeStats.remaining)}</Box>
+              </Box>
             </Stack>
           </Box>
         </Box>
@@ -394,6 +474,29 @@ export function PrompterPage({
               flexDirection: "column",
             }}
           >
+            <Box
+              sx={{
+                position: "absolute",
+                top: 24,
+                right: 24,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                fontFamily: "monospace",
+                fontSize: 16,
+                fontWeight: 700,
+                color: "#fff",
+                bgcolor: "rgba(0,0,0,0.4)",
+                px: 1.5,
+                py: 1,
+                borderRadius: 2,
+                pointerEvents: "none",
+                zIndex: 10,
+              }}
+            >
+              <Box>{formatTime(timeStats.elapsed)}</Box>
+              <Box sx={{ opacity: 0.6 }}>-{formatTime(timeStats.remaining)}</Box>
+            </Box>
             <Box
               ref={previewScrollRef}
               sx={{
@@ -511,6 +614,7 @@ export function PrompterPage({
         ) : null}
 
         <FullscreenOverlay
+          timeStats={timeStats}
           open={fsOpen}
           rootRef={fsRootRef}
           scrollRef={fsScrollRef}

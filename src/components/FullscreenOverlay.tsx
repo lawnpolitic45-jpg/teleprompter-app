@@ -9,12 +9,14 @@ import VerticalAlignTop from "@mui/icons-material/VerticalAlignTop";
 import { Box, IconButton, Paper, Stack, Tooltip } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { colors } from "../theme";
+import { formatTime } from "../pages/PrompterPage";
 import { PrompterContent } from "./PrompterContent";
 
 const DOCK_SHOW_ZONE = 120;
 const DOCK_HIDE_MS = 2500;
 
 type Props = {
+  timeStats: { elapsed: number; remaining: number };
   open: boolean;
   rootRef: React.RefObject<HTMLDivElement | null>;
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -32,6 +34,7 @@ type Props = {
 };
 
 export function FullscreenOverlay({
+  timeStats,
   open,
   rootRef,
   scrollRef,
@@ -115,6 +118,43 @@ export function FullscreenOverlay({
         flexDirection: "column",
       }}
     >
+      <Box
+        sx={{
+          position: "absolute",
+          top: 32,
+          left: 36,
+          fontFamily: "monospace",
+          fontSize: 28,
+          fontWeight: 700,
+          color: "#fff",
+          opacity: dockVisible ? 0.6 : 0.15,
+          transition: "opacity 300ms ease",
+          zIndex: 1500,
+          pointerEvents: "none",
+          textShadow: "0px 2px 8px rgba(0,0,0,0.8)",
+        }}
+      >
+        {formatTime(timeStats.elapsed)}
+      </Box>
+      <Box
+        sx={{
+          position: "absolute",
+          top: 32,
+          right: 36,
+          fontFamily: "monospace",
+          fontSize: 28,
+          fontWeight: 700,
+          color: "#fff",
+          opacity: dockVisible ? 0.6 : 0.15,
+          transition: "opacity 300ms ease",
+          zIndex: 1500,
+          pointerEvents: "none",
+          textShadow: "0px 2px 8px rgba(0,0,0,0.8)",
+        }}
+      >
+        -{formatTime(timeStats.remaining)}
+      </Box>
+
       <Box
         ref={scrollRef}
         sx={{
