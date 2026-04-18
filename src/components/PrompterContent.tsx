@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, InputBase } from "@mui/material";
 import { colors } from "../theme";
 
 type Props = {
@@ -7,8 +7,8 @@ type Props = {
   mirrorH: boolean;
   mirrorV: boolean;
   maxContentWidth?: number | string;
-  /** 全屏 / 预览深色：黑底白字 */
   variant?: "default" | "fullscreen" | "previewDark";
+  onChange?: (v: string) => void;
 };
 
 export function PrompterContent({
@@ -18,6 +18,7 @@ export function PrompterContent({
   mirrorV,
   maxContentWidth = "min(920px, 86vw)",
   variant = "default",
+  onChange,
 }: Props) {
   const paragraphs = text.length ? text.split(/\n{2,}/) : [];
   const dark = variant === "fullscreen" || variant === "previewDark";
@@ -39,6 +40,9 @@ export function PrompterContent({
         py: 3,
         px: { xs: 2, sm: 3 },
         position: "relative",
+        minHeight: "100%",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <Box
@@ -55,7 +59,28 @@ export function PrompterContent({
           pointerEvents: "none",
         }}
       />
-      {paragraphs.length === 0 ? (
+      {onChange ? (
+        <InputBase
+          multiline
+          fullWidth
+          value={text}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="在此输入或粘贴"
+          sx={{
+            flex: 1,
+            alignItems: "flex-start",
+            color: bodyColor,
+            fontSize: fontSizePx,
+            fontWeight: 500,
+            lineHeight: 1.45,
+            p: 0,
+            "& .MuiInputBase-input": {
+              p: 0,
+              minHeight: "50vh",
+            }
+          }}
+        />
+      ) : paragraphs.length === 0 ? (
         <Box
           component="p"
           sx={{
@@ -63,7 +88,7 @@ export function PrompterContent({
             color: emptyColor,
             fontSize: fontSizePx,
             fontWeight: 500,
-            lineHeight: 1.35,
+            lineHeight: 1.45,
           }}
         >
           在此输入或粘贴
@@ -79,12 +104,12 @@ export function PrompterContent({
               color: bodyColor,
               fontSize: fontSizePx,
               fontWeight: 500,
-              lineHeight: 1.35,
+              lineHeight: 1.45,
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
             }}
           >
-            {block}
+             {block}
           </Box>
         ))
       )}

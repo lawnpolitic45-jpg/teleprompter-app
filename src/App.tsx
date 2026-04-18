@@ -65,6 +65,7 @@ export default function App() {
     return (
       <PrompterPage
         script={script}
+        onScriptChange={setScript}
         fontSizePx={fontSizePx}
         speedPps={speedPps}
         mirrorH={mirrorH}

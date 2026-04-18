@@ -77,6 +77,7 @@ type ToastApi = { msg: string | null; show: (m: string) => void };
 
 type Props = {
   script: string;
+  onScriptChange: (v: string) => void;
   fontSizePx: number;
   speedPps: number;
   mirrorH: boolean;
@@ -91,6 +92,7 @@ type Props = {
 
 export function PrompterPage({
   script,
+  onScriptChange,
   fontSizePx,
   speedPps,
   mirrorH,
@@ -497,6 +499,7 @@ export function PrompterPage({
             >
               <PrompterContent
                 text={script}
+                onChange={playing ? undefined : onScriptChange}
                 fontSizePx={fontSizePx}
                 mirrorH={mirrorH}
                 mirrorV={mirrorV}
