@@ -189,7 +189,7 @@ export function PrompterPage({
 
   return (
     <ThemeProvider theme={appTheme}>
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}>
         <CssBaseline />
         <GlobalStyles
           styles={{
