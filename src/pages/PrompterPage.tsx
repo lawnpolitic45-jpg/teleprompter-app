@@ -227,10 +227,6 @@ export function PrompterPage({
           >
             返回
           </Button>
-          <Typography sx={{ fontSize: 16, fontWeight: 600, color: colors.title, letterSpacing: "0.01em" }}>
-            提词
-          </Typography>
-          <Typography sx={{ fontSize: 13, color: colors.iconMuted }}>{statusText}</Typography>
 
           <Box
             sx={{
@@ -285,47 +281,76 @@ export function PrompterPage({
               </Stack>
             </Box>
 
-            <FormControlLabel
-              sx={{ ml: 0 }}
-              control={
-                <Switch checked={mirrorH} onChange={(_, c) => onMirrorH(c)} sx={switchSx} />
-              }
-              label={
-                <Typography sx={{ fontSize: 12, fontWeight: 500, color: colors.label }}>水平镜像</Typography>
-              }
-            />
-            <FormControlLabel
-              sx={{ ml: 0 }}
-              control={
-                <Switch checked={mirrorV} onChange={(_, c) => onMirrorV(c)} sx={switchSx} />
-              }
-              label={
-                <Typography sx={{ fontSize: 12, fontWeight: 500, color: colors.label }}>垂直镜像</Typography>
-              }
-            />
+            <Button
+              variant={mirrorH ? "contained" : "outlined"}
+              onClick={() => onMirrorH(!mirrorH)}
+              sx={{
+                minWidth: 76,
+                height: 36,
+                fontSize: 12,
+                fontWeight: 600,
+                color: mirrorH ? "#fff" : colors.label,
+                bgcolor: mirrorH ? colors.primary : "transparent",
+                borderColor: mirrorH ? colors.primary : colors.border,
+                "&:hover": {
+                  bgcolor: mirrorH ? colors.primaryHover : "rgba(255, 255, 255, 0.05)",
+                  borderColor: mirrorH ? colors.primaryHover : colors.border,
+                }
+              }}
+            >
+              水平镜像
+            </Button>
+            <Button
+              variant={mirrorV ? "contained" : "outlined"}
+              onClick={() => onMirrorV(!mirrorV)}
+              sx={{
+                minWidth: 76,
+                height: 36,
+                fontSize: 12,
+                fontWeight: 600,
+                color: mirrorV ? "#fff" : colors.label,
+                bgcolor: mirrorV ? colors.primary : "transparent",
+                borderColor: mirrorV ? colors.primary : colors.border,
+                "&:hover": {
+                  bgcolor: mirrorV ? colors.primaryHover : "rgba(255, 255, 255, 0.05)",
+                  borderColor: mirrorV ? colors.primaryHover : colors.border,
+                }
+              }}
+            >
+              垂直镜像
+            </Button>
 
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Button
-                variant="contained"
-                startIcon={<Fullscreen />}
-                onClick={() => void openFullscreen()}
-                sx={{
-                  minWidth: 72,
-                  height: 40,
-                  fontWeight: 600,
-                  bgcolor: colors.primary,
-                  "&:hover": { bgcolor: colors.primaryHover },
-                }}
-              >
-                全屏
-              </Button>
-              <Tooltip title={fsOpen ? "全屏提词中" : playing ? "暂停" : "开始滚动"}>
+              <Tooltip title="全屏">
+                <IconButton
+                  onClick={() => void openFullscreen()}
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    bgcolor: colors.primary,
+                    color: "#fff",
+                    borderRadius: 1.5,
+                    "&:hover": { bgcolor: colors.primaryHover },
+                  }}
+                >
+                  <Fullscreen />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={playing && !fsOpen ? "暂停" : "开始滚动"}>
                 <span>
                   <IconButton
-                    color="primary"
-                    onClick={() => {
-                      if (fsOpen) setPlayingFs((v) => !v);
-                      else setPlayingPreview((v) => !v);
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (fsOpen) {
+                        setPlayingFs((v) => !v);
+                      } else {
+                        setPlayingPreview((v) => {
+                          const next = !v;
+                          queueMicrotask(() => toast.show(next ? "开始滚动" : "已暂停"));
+                          return next;
+                        });
+                      }
                     }}
                     disabled={fsOpen}
                     sx={{
@@ -333,6 +358,7 @@ export function PrompterPage({
                       height: 44,
                       bgcolor: colors.primary,
                       color: "#fff",
+                      borderRadius: 1.5,
                       "&:hover": { bgcolor: colors.primaryHover },
                       "&.Mui-disabled": { bgcolor: colors.track, color: colors.secondary },
                     }}
@@ -341,50 +367,34 @@ export function PrompterPage({
                   </IconButton>
                 </span>
               </Tooltip>
-              <Button
-                variant="outlined"
-                startIcon={<VerticalAlignTop />}
-                onClick={() => {
-                  scrollToTopActive();
-                  toast.show("已回到开头");
-                }}
-                sx={{
-                  minWidth: 72,
-                  height: 40,
-                  fontWeight: 600,
-                  borderColor: colors.border,
-                  color: colors.scriptText,
-                }}
-              >
-                开头
-              </Button>
+              <Tooltip title="回到开头">
+                <IconButton
+                  onClick={() => {
+                    scrollToTopActive();
+                    toast.show("已回到开头");
+                  }}
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    bgcolor: colors.primary,
+                    color: "#fff",
+                    borderRadius: 1.5,
+                    "&:hover": { bgcolor: colors.primaryHover },
+                  }}
+                >
+                  <VerticalAlignTop />
+                </IconButton>
+              </Tooltip>
             </Stack>
           </Box>
         </Box>
 
-        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, px: { xs: 1.5, sm: 2 }, pb: 1 }}>
-          <Typography
-            sx={{
-              mt: 2,
-              mb: 0.5,
-              fontSize: 12,
-              fontWeight: 500,
-              letterSpacing: "0.02em",
-              color: colors.subtle,
-            }}
-          >
-            提词预览
-          </Typography>
-
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, bgcolor: colors.black }}>
           <Box
             sx={{
               position: "relative",
               flex: 1,
               minHeight: 0,
-              bgcolor: colors.black,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 1,
-              overflow: "hidden",
               display: "flex",
               flexDirection: "column",
             }}
@@ -415,7 +425,11 @@ export function PrompterPage({
             sx={{
               mt: "auto",
               pt: 1,
+              pb: 1,
+              px: { xs: 1.5, sm: 2 },
               minHeight: 28,
+              bgcolor: colors.pageBg,
+              borderTop: `1px solid ${colors.border}`,
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",

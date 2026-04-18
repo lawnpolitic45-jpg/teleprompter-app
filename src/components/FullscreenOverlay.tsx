@@ -12,7 +12,7 @@ import { colors } from "../theme";
 import { PrompterContent } from "./PrompterContent";
 
 const DOCK_SHOW_ZONE = 120;
-const DOCK_HIDE_MS = 800;
+const DOCK_HIDE_MS = 2500;
 
 type Props = {
   open: boolean;
@@ -161,6 +161,14 @@ export function FullscreenOverlay({
 
       <Paper
         elevation={0}
+        onPointerEnter={() => {
+          if (hideTimer.current) clearTimeout(hideTimer.current);
+          setDockVisible(true);
+        }}
+        onPointerLeave={() => {
+          if (hideTimer.current) clearTimeout(hideTimer.current);
+          hideTimer.current = setTimeout(() => setDockVisible(false), DOCK_HIDE_MS);
+        }}
         sx={{
           position: "absolute",
           left: "50%",
@@ -185,7 +193,10 @@ export function FullscreenOverlay({
         <Stack direction="row" spacing={0.25} alignItems="center" flexWrap="wrap" useFlexGap justifyContent="center">
           <Tooltip title={playing ? "暂停 (Space)" : "继续 (Space)"}>
             <IconButton
-              onClick={onTogglePlay}
+              onClick={() => {
+                onTogglePlay();
+                onToast(!playing ? "继续进行" : "已暂停");
+              }}
               sx={{
                 color: colors.fullscreenText,
                 border: `1px solid ${playing ? "rgba(255,255,255,0.35)" : colors.primary}`,

@@ -8,8 +8,8 @@ type Options = {
 };
 
 /**
- * 匀速自动滚动。程序写入 scrollTop 后短暂忽略 scroll 事件，区分手动滚动。
- * 市面常见包如 react-scroll 偏「锚点跳转」，提词器更适合本机 rAF 连续滚动。
+ * 匀速自动滚动。通过追踪虚拟 scrollTop 与 DOM scrollTop 的偏差，
+ * 能够完美过滤由于修改状态 (如播放按钮或速度) 引发 React 延迟导致的原生滚动误判。
  */
 export function useAutoScroll({
   scrollRef,
@@ -17,7 +17,7 @@ export function useAutoScroll({
   playing,
   onUserInterrupt,
 }: Options): void {
-  const ignoreScrollUntil = useRef(0);
+  const expectedScrollTop = useRef<number | null>(null);
   const lastTs = useRef<number | null>(null);
   const rafId = useRef(0);
 
@@ -26,18 +26,25 @@ export function useAutoScroll({
     if (!el) return;
 
     const onScroll = () => {
-      if (performance.now() < ignoreScrollUntil.current) return;
-      if (playing) onUserInterrupt();
+      if (!playing) return;
+      if (expectedScrollTop.current === null) return;
+      
+      const diff = Math.abs(el.scrollTop - expectedScrollTop.current);
+      // Give 15px tolerance. A manual scroll (wheel, drag, touch) easily exceeds this.
+      // This absorbs browser subpixel rounding, layout resizing delays, and boundary clamping inaccuracies.
+      if (diff > 15) {
+        onUserInterrupt();
+      }
     };
 
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, [scrollRef, playing, onUserInterrupt]);
 
-  /** useLayoutEffect：首帧即可拿到 ref，且与 flex 子项滚动区配合避免「点了不滚」 */
   useLayoutEffect(() => {
     if (!playing) {
       lastTs.current = null;
+      expectedScrollTop.current = null;
       cancelAnimationFrame(rafId.current);
       return;
     }
@@ -47,20 +54,26 @@ export function useAutoScroll({
 
     const tick = (ts: number) => {
       if (!playing) return;
-      if (lastTs.current === null) lastTs.current = ts;
+      if (lastTs.current === null) {
+        lastTs.current = ts;
+        expectedScrollTop.current = el.scrollTop;
+      }
       const dt = Math.min(0.05, (ts - lastTs.current) / 1000);
       lastTs.current = ts;
 
       const max = el.scrollHeight - el.clientHeight;
       if (max <= 0) {
-        ignoreScrollUntil.current = performance.now() + 32;
         rafId.current = requestAnimationFrame(tick);
         return;
       }
 
-      const next = Math.min(el.scrollTop + speedPps * dt, max);
-      ignoreScrollUntil.current = performance.now() + 32;
+      let currentVirtualTop = expectedScrollTop.current!;
+      let next = currentVirtualTop + speedPps * dt;
+      next = Math.min(next, max);
+      
+      expectedScrollTop.current = next;
       el.scrollTop = next;
+      
       rafId.current = requestAnimationFrame(tick);
     };
 
