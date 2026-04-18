@@ -8,11 +8,12 @@ import {
   CssBaseline,
   FormControlLabel,
   GlobalStyles,
+  IconButton,
   Slider,
   Stack,
   Switch,
   ThemeProvider,
-  Toolbar,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -29,10 +30,12 @@ type Props = {
   script: string;
   fontSizePx: number;
   speedPps: number;
-  mirror: boolean;
+  mirrorH: boolean;
+  mirrorV: boolean;
   onFontSizePx: (v: number) => void;
   onSpeedPps: (v: number) => void;
-  onMirror: (v: boolean) => void;
+  onMirrorH: (v: boolean) => void;
+  onMirrorV: (v: boolean) => void;
   toast: ToastApi;
   onBackHome: () => void;
 };
@@ -41,10 +44,12 @@ export function PrompterPage({
   script,
   fontSizePx,
   speedPps,
-  mirror,
+  mirrorH,
+  mirrorV,
   onFontSizePx,
   onSpeedPps,
-  onMirror,
+  onMirrorH,
+  onMirrorV,
   toast,
   onBackHome,
 }: Props) {
@@ -55,6 +60,11 @@ export function PrompterPage({
   playingFsRef.current = playingFs;
   const fsOpenRef = useRef(false);
   fsOpenRef.current = fsOpen;
+
+  const speedRef = useRef(speedPps);
+  const fontRef = useRef(fontSizePx);
+  speedRef.current = speedPps;
+  fontRef.current = fontSizePx;
 
   const previewScrollRef = useRef<HTMLDivElement>(null);
   const fsRootRef = useRef<HTMLDivElement>(null);
@@ -142,8 +152,8 @@ export function PrompterPage({
       if (!typing && (e.code === "ArrowUp" || e.code === "ArrowDown")) {
         e.preventDefault();
         const delta = e.code === "ArrowUp" ? 6 : -6;
-        const next = Math.min(180, Math.max(12, speedPps + delta));
-        if (next !== speedPps) {
+        const next = Math.min(180, Math.max(12, speedRef.current + delta));
+        if (next !== speedRef.current) {
           onSpeedPps(next);
           queueMicrotask(() => toast.show(`速度 ${Math.round(next)}`));
         }
@@ -155,20 +165,27 @@ export function PrompterPage({
         if (dec || inc) {
           e.preventDefault();
           const delta = dec ? -2 : 2;
-          const next = Math.min(72, Math.max(20, fontSizePx + delta));
-          if (next !== fontSizePx) {
+          const next = Math.min(72, Math.max(20, fontRef.current + delta));
+          if (next !== fontRef.current) {
             onFontSizePx(next);
             queueMicrotask(() => toast.show(`字号 ${next}`));
           }
         }
       }
-      if (e.key === "Escape" && fsOpen) closeFullscreen();
+      if (e.key === "Escape" && fsOpenRef.current) closeFullscreen();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [closeFullscreen, fsOpen, toast, fontSizePx, speedPps, onFontSizePx, onSpeedPps]);
+  }, [closeFullscreen, toast, onFontSizePx, onSpeedPps]);
 
   const statusText = playing ? "滚动中" : "未滚动";
+
+  const switchSx = {
+    "& .MuiSwitch-switchBase.Mui-checked": { color: colors.primary },
+    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+      bgcolor: `${colors.primary} !important`,
+    },
+  } as const;
 
   return (
     <ThemeProvider theme={appTheme}>
@@ -185,13 +202,16 @@ export function PrompterPage({
         <Box
           component="header"
           sx={{
-            height: 56,
             borderBottom: `1px solid ${colors.border}`,
             bgcolor: colors.pageBg,
             display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
             alignItems: "center",
-            px: 2,
             gap: 1.5,
+            rowGap: 1.25,
+            py: 1.25,
+            px: 2,
           }}
         >
           <Button
@@ -210,25 +230,21 @@ export function PrompterPage({
           <Typography sx={{ fontSize: 16, fontWeight: 600, color: colors.title, letterSpacing: "0.01em" }}>
             提词
           </Typography>
-          <Typography sx={{ ml: 1, fontSize: 13, color: colors.iconMuted }}>{statusText}</Typography>
-        </Box>
+          <Typography sx={{ fontSize: 13, color: colors.iconMuted }}>{statusText}</Typography>
 
-        <Toolbar
-          sx={{
-            minHeight: 72,
-            bgcolor: colors.toolbarBg,
-            flexWrap: "wrap",
-            gap: 2,
-            py: 1.5,
-            px: 2,
-            borderBottom: `1px solid ${colors.border}`,
-          }}
-        >
-          <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap sx={{ flex: 1, alignItems: "center" }}>
-            <Box sx={{ minWidth: 160, flex: "1 1 180px" }}>
-              <Typography sx={{ fontSize: 12, fontWeight: 500, color: colors.label, mb: 0.5 }}>
-                字号
-              </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 2,
+              rowGap: 1.25,
+              flex: "1 1 240px",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Box sx={{ minWidth: 140, flex: "1 1 140px", maxWidth: 220 }}>
+              <Typography sx={{ fontSize: 12, fontWeight: 500, color: colors.label, mb: 0.5 }}>字号</Typography>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Slider
                   size="small"
@@ -242,16 +258,14 @@ export function PrompterPage({
                     "& .MuiSlider-rail": { bgcolor: colors.track },
                   }}
                 />
-                <Typography sx={{ width: 40, fontSize: 14, fontWeight: 600, color: colors.value }}>
+                <Typography sx={{ width: 36, fontSize: 14, fontWeight: 600, color: colors.value }}>
                   {fontSizePx}
                 </Typography>
               </Stack>
             </Box>
 
-            <Box sx={{ minWidth: 160, flex: "1 1 180px" }}>
-              <Typography sx={{ fontSize: 12, fontWeight: 500, color: colors.label, mb: 0.5 }}>
-                速度
-              </Typography>
+            <Box sx={{ minWidth: 140, flex: "1 1 140px", maxWidth: 220 }}>
+              <Typography sx={{ fontSize: 12, fontWeight: 500, color: colors.label, mb: 0.5 }}>速度</Typography>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Slider
                   size="small"
@@ -265,7 +279,7 @@ export function PrompterPage({
                     "& .MuiSlider-rail": { bgcolor: colors.track },
                   }}
                 />
-                <Typography sx={{ width: 40, fontSize: 14, fontWeight: 600, color: colors.value }}>
+                <Typography sx={{ width: 36, fontSize: 14, fontWeight: 600, color: colors.value }}>
                   {Math.round(speedPps)}
                 </Typography>
               </Stack>
@@ -274,74 +288,79 @@ export function PrompterPage({
             <FormControlLabel
               sx={{ ml: 0 }}
               control={
-                <Switch
-                  checked={mirror}
-                  onChange={(_, c) => onMirror(c)}
-                  sx={{
-                    "& .MuiSwitch-switchBase.Mui-checked": { color: colors.primary },
-                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                      bgcolor: `${colors.primary} !important`,
-                    },
-                  }}
-                />
+                <Switch checked={mirrorH} onChange={(_, c) => onMirrorH(c)} sx={switchSx} />
               }
-              label={<Typography sx={{ fontSize: 12, fontWeight: 500, color: colors.label }}>镜像</Typography>}
+              label={
+                <Typography sx={{ fontSize: 12, fontWeight: 500, color: colors.label }}>水平镜像</Typography>
+              }
             />
-          </Stack>
+            <FormControlLabel
+              sx={{ ml: 0 }}
+              control={
+                <Switch checked={mirrorV} onChange={(_, c) => onMirrorV(c)} sx={switchSx} />
+              }
+              label={
+                <Typography sx={{ fontSize: 12, fontWeight: 500, color: colors.label }}>垂直镜像</Typography>
+              }
+            />
 
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ justifyContent: "flex-end" }}>
-            <Button
-              variant="contained"
-              startIcon={<Fullscreen />}
-              onClick={() => void openFullscreen()}
-              sx={{
-                minWidth: 120,
-                height: 44,
-                fontWeight: 600,
-                bgcolor: colors.primary,
-                "&:hover": { bgcolor: colors.primaryHover },
-              }}
-            >
-              进入全屏提词
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={playing && !fsOpen ? <Pause /> : <PlayArrow />}
-              onClick={() => {
-                if (fsOpen) setPlayingFs((v) => !v);
-                else setPlayingPreview((v) => !v);
-              }}
-              disabled={fsOpen}
-              sx={{
-                minWidth: 120,
-                height: 44,
-                fontWeight: 600,
-                bgcolor: colors.primary,
-                "&:hover": { bgcolor: colors.primaryHover },
-                "&.Mui-disabled": { bgcolor: colors.track, color: colors.secondary },
-              }}
-            >
-              {fsOpen ? "全屏提词中" : playing ? "暂停" : "开始滚动"}
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<VerticalAlignTop />}
-              onClick={() => {
-                scrollToTopActive();
-                toast.show("已回到开头");
-              }}
-              sx={{
-                minWidth: 120,
-                height: 44,
-                fontWeight: 600,
-                borderColor: colors.border,
-                color: colors.scriptText,
-              }}
-            >
-              回到开头
-            </Button>
-          </Stack>
-        </Toolbar>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Button
+                variant="contained"
+                startIcon={<Fullscreen />}
+                onClick={() => void openFullscreen()}
+                sx={{
+                  minWidth: 72,
+                  height: 40,
+                  fontWeight: 600,
+                  bgcolor: colors.primary,
+                  "&:hover": { bgcolor: colors.primaryHover },
+                }}
+              >
+                全屏
+              </Button>
+              <Tooltip title={fsOpen ? "全屏提词中" : playing ? "暂停" : "开始滚动"}>
+                <span>
+                  <IconButton
+                    color="primary"
+                    onClick={() => {
+                      if (fsOpen) setPlayingFs((v) => !v);
+                      else setPlayingPreview((v) => !v);
+                    }}
+                    disabled={fsOpen}
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      bgcolor: colors.primary,
+                      color: "#fff",
+                      "&:hover": { bgcolor: colors.primaryHover },
+                      "&.Mui-disabled": { bgcolor: colors.track, color: colors.secondary },
+                    }}
+                  >
+                    {playing && !fsOpen ? <Pause /> : <PlayArrow />}
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Button
+                variant="outlined"
+                startIcon={<VerticalAlignTop />}
+                onClick={() => {
+                  scrollToTopActive();
+                  toast.show("已回到开头");
+                }}
+                sx={{
+                  minWidth: 72,
+                  height: 40,
+                  fontWeight: 600,
+                  borderColor: colors.border,
+                  color: colors.scriptText,
+                }}
+              >
+                开头
+              </Button>
+            </Stack>
+          </Box>
+        </Box>
 
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, px: { xs: 1.5, sm: 2 }, pb: 1 }}>
           <Typography
@@ -361,8 +380,8 @@ export function PrompterPage({
             sx={{
               position: "relative",
               flex: 1,
-              minHeight: { xs: 320, sm: 360 },
-              bgcolor: colors.canvas,
+              minHeight: 0,
+              bgcolor: colors.black,
               border: `1px solid ${colors.border}`,
               borderRadius: 1,
               overflow: "hidden",
@@ -374,12 +393,20 @@ export function PrompterPage({
               ref={previewScrollRef}
               sx={{
                 flex: 1,
+                minHeight: 0,
                 overflowY: "auto",
                 overflowX: "hidden",
                 scrollbarGutter: "stable",
               }}
             >
-              <PrompterContent text={script} fontSizePx={fontSizePx} mirror={mirror} maxContentWidth="100%" />
+              <PrompterContent
+                text={script}
+                fontSizePx={fontSizePx}
+                mirrorH={mirrorH}
+                mirrorV={mirrorV}
+                variant="previewDark"
+                maxContentWidth="100%"
+              />
             </Box>
           </Box>
 
@@ -480,20 +507,32 @@ export function PrompterPage({
           scrollRef={fsScrollRef}
           script={script}
           fontSizePx={fontSizePx}
-          mirror={mirror}
+          mirrorH={mirrorH}
+          mirrorV={mirrorV}
           playing={playingFs}
-          speedPps={speedPps}
           onClose={closeFullscreen}
           onTogglePlay={() => setPlayingFs((v) => !v)}
           onTop={() => {
             if (fsScrollRef.current) fsScrollRef.current.scrollTop = 0;
             toast.show("已回到开头");
           }}
-          onSpeedDelta={(d) => onSpeedPps(Math.min(180, Math.max(12, speedPps + d)))}
+          onSpeedDelta={(d) => {
+            const next = Math.min(180, Math.max(12, speedRef.current + d));
+            if (next !== speedRef.current) {
+              onSpeedPps(next);
+              queueMicrotask(() => toast.show(`速度 ${Math.round(next)}`));
+            }
+          }}
+          onFontSizeDelta={(d) => {
+            const next = Math.min(72, Math.max(20, fontRef.current + d));
+            if (next !== fontRef.current) {
+              onFontSizePx(next);
+              queueMicrotask(() => toast.show(`字号 ${next}`));
+            }
+          }}
           onToast={toast.show}
         />
       </Box>
     </ThemeProvider>
   );
 }
-

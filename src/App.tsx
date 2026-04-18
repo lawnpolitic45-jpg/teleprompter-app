@@ -36,13 +36,14 @@ export default function App() {
   const [script, setScript] = useState(initial.script);
   const [fontSizePx, setFontSizePx] = useState(initial.settings.fontSizePx);
   const [speedPps, setSpeedPps] = useState(initial.settings.speedPps);
-  const [mirror, setMirror] = useState(initial.settings.mirror);
+  const [mirrorH, setMirrorH] = useState(initial.settings.mirrorH);
+  const [mirrorV, setMirrorV] = useState(initial.settings.mirrorV);
 
   const { msg: toast, show: showToast } = useToast();
 
   useEffect(() => {
-    saveState({ script, settings: { fontSizePx, speedPps, mirror } });
-  }, [script, fontSizePx, speedPps, mirror]);
+    saveState({ script, settings: { fontSizePx, speedPps, mirrorH, mirrorV } });
+  }, [script, fontSizePx, speedPps, mirrorH, mirrorV]);
 
   const [route, setRoute] = useState<Route>(() => getRouteFromHash());
 
@@ -66,10 +67,12 @@ export default function App() {
         script={script}
         fontSizePx={fontSizePx}
         speedPps={speedPps}
-        mirror={mirror}
+        mirrorH={mirrorH}
+        mirrorV={mirrorV}
         onFontSizePx={setFontSizePx}
         onSpeedPps={setSpeedPps}
-        onMirror={setMirror}
+        onMirrorH={setMirrorH}
+        onMirrorV={setMirrorV}
         toast={{ msg: toast, show: showToast }}
         onBackHome={goHome}
       />

@@ -4,29 +4,37 @@ import { colors } from "../theme";
 type Props = {
   text: string;
   fontSizePx: number;
-  mirror: boolean;
+  mirrorH: boolean;
+  mirrorV: boolean;
   maxContentWidth?: number | string;
-  /** 全屏深底时用浅色字 */
-  variant?: "default" | "fullscreen";
+  /** 全屏 / 预览深色：黑底白字 */
+  variant?: "default" | "fullscreen" | "previewDark";
 };
 
 export function PrompterContent({
   text,
   fontSizePx,
-  mirror,
+  mirrorH,
+  mirrorV,
   maxContentWidth = "min(920px, 86vw)",
   variant = "default",
 }: Props) {
   const paragraphs = text.length ? text.split(/\n{2,}/) : [];
-  const bodyColor = variant === "fullscreen" ? colors.fullscreenText : colors.title;
-  const emptyColor = variant === "fullscreen" ? colors.fullscreenMuted : colors.secondary;
+  const dark = variant === "fullscreen" || variant === "previewDark";
+  const bodyColor = dark ? colors.fullscreenText : colors.title;
+  const emptyColor = dark ? colors.fullscreenMuted : colors.secondary;
+
+  const mirrorParts: string[] = [];
+  if (mirrorH) mirrorParts.push("scaleX(-1)");
+  if (mirrorV) mirrorParts.push("scaleY(-1)");
+  const mirrorTransform = mirrorParts.length ? mirrorParts.join(" ") : undefined;
 
   return (
     <Box
       sx={{
         mx: "auto",
         width: maxContentWidth,
-        transform: mirror ? "scaleX(-1)" : undefined,
+        transform: mirrorTransform,
         transformOrigin: "center",
         py: 3,
         px: { xs: 2, sm: 3 },

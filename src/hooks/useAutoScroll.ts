@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 type Options = {
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -34,7 +34,8 @@ export function useAutoScroll({
     return () => el.removeEventListener("scroll", onScroll);
   }, [scrollRef, playing, onUserInterrupt]);
 
-  useEffect(() => {
+  /** useLayoutEffect：首帧即可拿到 ref，且与 flex 子项滚动区配合避免「点了不滚」 */
+  useLayoutEffect(() => {
     if (!playing) {
       lastTs.current = null;
       cancelAnimationFrame(rafId.current);

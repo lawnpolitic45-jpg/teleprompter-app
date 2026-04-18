@@ -1,10 +1,12 @@
 import Add from "@mui/icons-material/Add";
 import CloseFullscreen from "@mui/icons-material/CloseFullscreen";
+import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
 import Pause from "@mui/icons-material/Pause";
 import PlayArrow from "@mui/icons-material/PlayArrow";
 import Remove from "@mui/icons-material/Remove";
 import VerticalAlignTop from "@mui/icons-material/VerticalAlignTop";
-import { Box, IconButton, Paper, Stack, Tooltip, Typography } from "@mui/material";
+import { Box, IconButton, Paper, Stack, Tooltip } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { colors } from "../theme";
 import { PrompterContent } from "./PrompterContent";
@@ -18,13 +20,14 @@ type Props = {
   scrollRef: React.RefObject<HTMLDivElement | null>;
   script: string;
   fontSizePx: number;
-  mirror: boolean;
+  mirrorH: boolean;
+  mirrorV: boolean;
   playing: boolean;
-  speedPps: number;
   onClose: () => void;
   onTogglePlay: () => void;
   onTop: () => void;
   onSpeedDelta: (delta: number) => void;
+  onFontSizeDelta: (delta: number) => void;
   onToast: (msg: string) => void;
 };
 
@@ -34,13 +37,14 @@ export function FullscreenOverlay({
   scrollRef,
   script,
   fontSizePx,
-  mirror,
+  mirrorH,
+  mirrorV,
   playing,
-  speedPps,
   onClose,
   onTogglePlay,
   onTop,
   onSpeedDelta,
+  onFontSizeDelta,
   onToast,
 }: Props) {
   const [dockVisible, setDockVisible] = useState(true);
@@ -54,9 +58,9 @@ export function FullscreenOverlay({
   });
 
   const bumpDock = useCallback(() => {
-    setDockVisible(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => setDockVisible(false), DOCK_HIDE_MS);
+    setDockVisible((prev) => (prev ? prev : true));
   }, []);
 
   useEffect(() => {
@@ -65,11 +69,13 @@ export function FullscreenOverlay({
       if (hideTimer.current) clearTimeout(hideTimer.current);
       return;
     }
-    bumpDock();
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setDockVisible(false), DOCK_HIDE_MS);
+    setDockVisible(true);
     return () => {
       if (hideTimer.current) clearTimeout(hideTimer.current);
     };
-  }, [open, bumpDock]);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -113,12 +119,19 @@ export function FullscreenOverlay({
         ref={scrollRef}
         sx={{
           flex: 1,
+          minHeight: 0,
           overflowY: "auto",
           overflowX: "hidden",
           scrollbarGutter: "stable",
         }}
       >
-        <PrompterContent text={script} fontSizePx={fontSizePx} mirror={mirror} variant="fullscreen" />
+        <PrompterContent
+          text={script}
+          fontSizePx={fontSizePx}
+          mirrorH={mirrorH}
+          mirrorV={mirrorV}
+          variant="fullscreen"
+        />
       </Box>
 
       <Box
@@ -130,7 +143,7 @@ export function FullscreenOverlay({
           left: 0,
           right: 0,
           height: 96,
-          background: "linear-gradient(to bottom, rgba(2, 44, 34, 0.72), transparent)",
+          background: "linear-gradient(to bottom, rgba(0,0,0,0.55), transparent)",
         }}
       />
       <Box
@@ -142,7 +155,7 @@ export function FullscreenOverlay({
           left: 0,
           right: 0,
           height: 96,
-          background: "linear-gradient(to top, rgba(2, 44, 34, 0.72), transparent)",
+          background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)",
         }}
       />
 
@@ -153,57 +166,71 @@ export function FullscreenOverlay({
           left: "50%",
           bottom: 12,
           transform: "translateX(-50%)",
-          width: "min(520px, 92vw)",
-          height: 56,
-          px: 1,
+          width: "min(560px, 94vw)",
+          minHeight: 56,
+          px: 0.75,
+          py: 0.5,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           bgcolor: colors.dockPaper,
           backdropFilter: "blur(8px)",
-          border: `1px solid rgba(167, 243, 208, 0.45)`,
+          border: `1px solid rgba(255, 255, 255, 0.12)`,
           opacity: dockVisible ? 1 : 0,
           transition: "opacity 220ms ease",
           pointerEvents: dockVisible ? "auto" : "none",
+          zIndex: 1700,
         }}
       >
-        <Stack direction="row" spacing={0.5} alignItems="center">
+        <Stack direction="row" spacing={0.25} alignItems="center" flexWrap="wrap" useFlexGap justifyContent="center">
           <Tooltip title={playing ? "暂停 (Space)" : "继续 (Space)"}>
             <IconButton
               onClick={onTogglePlay}
               sx={{
                 color: colors.fullscreenText,
-                border: `1px solid ${playing ? "rgba(167, 243, 208, 0.55)" : colors.primary}`,
+                border: `1px solid ${playing ? "rgba(255,255,255,0.35)" : colors.primary}`,
               }}
               aria-label={playing ? "暂停" : "继续"}
             >
               {playing ? <Pause /> : <PlayArrow />}
             </IconButton>
           </Tooltip>
-          <Tooltip title="减速">
+          <Tooltip title="减速（↓）">
             <IconButton
               onClick={() => onSpeedDelta(-6)}
               sx={{ color: colors.fullscreenText }}
               aria-label="减速"
             >
-              <Remove />
+              <KeyboardArrowDown />
             </IconButton>
           </Tooltip>
-          <Tooltip title="加速">
+          <Tooltip title="加速（↑）">
             <IconButton
               onClick={() => onSpeedDelta(6)}
               sx={{ color: colors.fullscreenText }}
               aria-label="加速"
             >
+              <KeyboardArrowUp />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="字号减小（-）">
+            <IconButton
+              onClick={() => onFontSizeDelta(-2)}
+              sx={{ color: colors.fullscreenText }}
+              aria-label="字号减小"
+            >
+              <Remove />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="字号增大（+）">
+            <IconButton
+              onClick={() => onFontSizeDelta(2)}
+              sx={{ color: colors.fullscreenText }}
+              aria-label="字号增大"
+            >
               <Add />
             </IconButton>
           </Tooltip>
-          <Typography
-            variant="caption"
-            sx={{ minWidth: 52, textAlign: "center", color: colors.fullscreenText, fontWeight: 600 }}
-          >
-            {Math.round(speedPps)}
-          </Typography>
           <Tooltip title="回到开头">
             <IconButton onClick={onTop} sx={{ color: colors.fullscreenText }} aria-label="回到开头">
               <VerticalAlignTop />

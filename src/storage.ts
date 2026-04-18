@@ -3,7 +3,8 @@ const KEY = "teleprompter:mvp:v1";
 export type StoredSettings = {
   fontSizePx: number;
   speedPps: number;
-  mirror: boolean;
+  mirrorH: boolean;
+  mirrorV: boolean;
 };
 
 export type StoredState = {
@@ -14,7 +15,8 @@ export type StoredState = {
 const defaultSettings: StoredSettings = {
   fontSizePx: 40,
   speedPps: 48,
-  mirror: false,
+  mirrorH: false,
+  mirrorV: false,
 };
 
 export function loadState(): StoredState {
@@ -22,6 +24,13 @@ export function loadState(): StoredState {
     const raw = localStorage.getItem(KEY);
     if (!raw) return { script: "", settings: { ...defaultSettings } };
     const parsed = JSON.parse(raw) as Partial<StoredState>;
+    const rawSettings = parsed.settings as Record<string, unknown> | undefined;
+    const legacyMirror = typeof rawSettings?.mirror === "boolean" ? rawSettings.mirror : undefined;
+    const mirrorH =
+      typeof rawSettings?.mirrorH === "boolean" ? rawSettings.mirrorH : legacyMirror ?? defaultSettings.mirrorH;
+    const mirrorV =
+      typeof rawSettings?.mirrorV === "boolean" ? rawSettings.mirrorV : defaultSettings.mirrorV;
+
     return {
       script: typeof parsed.script === "string" ? parsed.script : "",
       settings: {
@@ -33,10 +42,8 @@ export function loadState(): StoredState {
           typeof parsed.settings?.speedPps === "number"
             ? parsed.settings.speedPps
             : defaultSettings.speedPps,
-        mirror:
-          typeof parsed.settings?.mirror === "boolean"
-            ? parsed.settings.mirror
-            : defaultSettings.mirror,
+        mirrorH,
+        mirrorV,
       },
     };
   } catch {

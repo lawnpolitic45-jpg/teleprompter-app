@@ -19,12 +19,12 @@ export const colors = {
   scriptPlaceholder: "#86EFAC",
   danger: "#EF4444",
   black: "#000000",
-  /** 全屏提词底：深绿底 + 浅色字，保证可读性 */
-  fullscreenBg: "#022C22",
-  fullscreenText: "#F0FDF4",
-  fullscreenMuted: "#86EFAC",
+  /** 全屏提词：黑底白字 */
+  fullscreenBg: "#000000",
+  fullscreenText: "#FFFFFF",
+  fullscreenMuted: "#A3A3A3",
   canvas: "#FFFFFF",
-  dockPaper: "rgba(22, 101, 52, 0.78)",
+  dockPaper: "rgba(30, 30, 30, 0.92)",
 } as const;
 
 export const appTheme = createTheme({
