@@ -6,12 +6,10 @@ import {
   Box,
   Button,
   CssBaseline,
-  FormControlLabel,
   GlobalStyles,
   IconButton,
   Slider,
   Stack,
-  Switch,
   ThemeProvider,
   Tooltip,
   Typography,
@@ -180,12 +178,7 @@ export function PrompterPage({
 
   const statusText = playing ? "滚动中" : "未滚动";
 
-  const switchSx = {
-    "& .MuiSwitch-switchBase.Mui-checked": { color: colors.primary },
-    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-      bgcolor: `${colors.primary} !important`,
-    },
-  } as const;
+
 
   return (
     <ThemeProvider theme={appTheme}>
