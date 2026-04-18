@@ -21,6 +21,7 @@ import { KeyCap } from "../components/KeyCap";
 import { PrompterContent } from "../components/PrompterContent";
 import { useAutoScroll } from "../hooks/useAutoScroll";
 import { appTheme, colors } from "../theme";
+import { computeScriptStats } from "../utils/scriptStats";
 
 type ToastApi = { msg: string | null; show: (m: string) => void };
 
@@ -61,6 +62,8 @@ export function PrompterPage({
 
   const activeScrollRef = fsOpen ? fsScrollRef : previewScrollRef;
   const playing = fsOpen ? playingFs : playingPreview;
+
+  const { unitCount, punctuationCount, lineCount } = computeScriptStats(script);
 
   const onUserInterrupt = useCallback(() => {
     setPlayingPreview(false);
@@ -396,7 +399,9 @@ export function PrompterPage({
               rowGap: 1,
             }}
           >
-            <span>{script.length} 字 · {statusText}</span>
+            <span>
+              字数 {unitCount} · 标点 {punctuationCount} · 行数 {lineCount} · {statusText}
+            </span>
             <Box
               sx={{
                 display: "flex",

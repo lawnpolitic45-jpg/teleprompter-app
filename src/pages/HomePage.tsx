@@ -1,7 +1,8 @@
 import PlayArrow from "@mui/icons-material/PlayArrow";
-import { Box, CssBaseline, IconButton, Stack, TextField, ThemeProvider, Typography } from "@mui/material";
+import { Box, CssBaseline, IconButton, TextField, ThemeProvider, Typography } from "@mui/material";
 import { KeyCap } from "../components/KeyCap";
 import { homeColors, homeTheme } from "../theme";
+import { computeScriptStats } from "../utils/scriptStats";
 
 type Props = {
   script: string;
@@ -52,6 +53,8 @@ function ShortcutLine() {
 }
 
 export function HomePage({ script, onScriptChange, onStart }: Props) {
+  const { unitCount, punctuationCount, lineCount } = computeScriptStats(script);
+
   return (
     <ThemeProvider theme={homeTheme}>
       <CssBaseline />
@@ -144,6 +147,46 @@ export function HomePage({ script, onScriptChange, onStart }: Props) {
             <Box sx={{ mt: "auto", display: "flex", flexDirection: "column", gap: 1.5, pt: 0.5 }}>
               <Box
                 sx={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1.5,
+                  width: "100%",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 12.5,
+                    color: homeColors.subtle,
+                    flex: "1 1 auto",
+                    minWidth: 0,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  字数 {unitCount} · 标点 {punctuationCount} · 行数 {lineCount}
+                </Typography>
+                <IconButton
+                  aria-label="开始提词"
+                  onClick={onStart}
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    p: 0,
+                    flexShrink: 0,
+                    borderRadius: "50%",
+                    bgcolor: homeColors.primary,
+                    color: "#fff",
+                    "&:hover": { bgcolor: homeColors.primaryHover },
+                    "& .MuiSvgIcon-root": { fontSize: 32, ml: 0.25 },
+                  }}
+                >
+                  <PlayArrow />
+                </IconButton>
+              </Box>
+
+              <Box
+                sx={{
                   width: "100%",
                   p: 1.25,
                   borderRadius: 2,
@@ -164,27 +207,6 @@ export function HomePage({ script, onScriptChange, onStart }: Props) {
                 </Typography>
                 <ShortcutLine />
               </Box>
-
-              <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="flex-end" sx={{ width: "100%" }}>
-                <Typography sx={{ fontSize: 12.5, color: homeColors.subtle }}>{script.length} 字</Typography>
-                <IconButton
-                  aria-label="开始提词"
-                  onClick={onStart}
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    p: 0,
-                    flexShrink: 0,
-                    borderRadius: "50%",
-                    bgcolor: homeColors.primary,
-                    color: "#fff",
-                    "&:hover": { bgcolor: homeColors.primaryHover },
-                    "& .MuiSvgIcon-root": { fontSize: 32, ml: 0.25 },
-                  }}
-                >
-                  <PlayArrow />
-                </IconButton>
-              </Stack>
             </Box>
           </Box>
         </Box>
